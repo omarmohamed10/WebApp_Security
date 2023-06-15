@@ -12,31 +12,46 @@ namespace WebApp.Pages.Account
     public class LoginModel : PageModel
     {
         private readonly SignInManager<User> signInManager;
-        public LoginModel(SignInManager<User> signInManager)
+        private readonly UserManager<User> userManager;
+        public LoginModel(SignInManager<User> signInManager , UserManager<User> userManager)
         {
             this.signInManager = signInManager;
+            this.userManager = userManager;
         }
         [BindProperty]
         public CredentialViewModel Credential { get; set; }
         public void OnGet()
         {
-            
+        
         }
         public async Task<IActionResult> OnPostAsync()
         {
             if(!ModelState.IsValid) { return Page(); }
+           var user = userManager.FindByEmailAsync(Credential.Email).Result;
+
+           await userManager.SetTwoFactorEnabledAsync(user, true);
 
             var result = await signInManager.PasswordSignInAsync(this.Credential.Email,
                 this.Credential.Password,
                 this.Credential.RememberMe,
                 false);
 
-            if(result.Succeeded)
+            var twoFactorEnabled =  userManager.GetTwoFactorEnabledAsync(user).Result;
+
+            if (result.Succeeded && !twoFactorEnabled)
             {
                 return RedirectToPage("/Index");
             }
             else
             {
+                if (twoFactorEnabled)
+                {
+                    return RedirectToPage("/Account/LoginTwoFactor", new
+                    {
+                        Email = this.Credential.Email,
+                        RememberMe = this.Credential.RememberMe
+                    });
+                }
                 if(result.IsLockedOut)
                 {
                     ModelState.AddModelError("Login", "You 're Locked out");

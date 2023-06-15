@@ -52,7 +52,7 @@ namespace WebApp.Pages.Account
                     values : new {userId = user.Id,token = confirmationToken });
               string Sender = configuration["SenderMail"];
    
-              await EmailService.SendAsync(Sender, "om8412937@gmail.com", "Confirmation Mail",
+              await EmailService.SendAsync(Sender, "om644123@gmail.com", "Confirmation Mail",
                                   $"Please Click on this link to confirm your email adress: {confirmationLink}");
 
                 return RedirectToPage("/Account/Login");
